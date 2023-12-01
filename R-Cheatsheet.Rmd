@@ -1,0 +1,767 @@
+---
+title: "R Cheatsheet"
+author: "Benedikt Haarscheidt"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+---
+
+```{r label=loading,results="hide"}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(knitr)
+source("/Users/benedikthaarscheidt/M.Sc./SBI-labs/session-2023-11-15/lipsum.R")
+library("palmerpenguins")
+source("/Users/benedikthaarscheidt/M.Sc./SBI-labs/Functions/sbi.R")
+survey=read.table('/Users/benedikthaarscheidt/M.Sc./SBI-labs/Data/survey-2021-11.tab.txt', header=TRUE, stringsAsFactors=TRUE)
+```
+
+This document serves the purpose of a cheatsheet. I wrote this because I'm too lazy to search for all the information form the lecture in the lecture slides. The explanations in data is always made with using the Palmerpenguins Package.
+<br>
+# Table of Contents
+- [Section 1](#General Purpose)
+  - [Subsection 1.1](#s)
+- [Section 2](#section-2)
+
+<br>
+
+# General Purpose
+--class()
+```{r}
+##This gives you the class of penguins.
+class(penguins)
+```
+ 
+<br>
+--head/tail
+```{r eval=FALSE}
+
+## the n specifies how many lines you wan to see
+head(penguins,n=1) ##from the back with tail()
+```
+<br>
+--combine
+```{r}
+##combine values/vectors into a vector or list (list only when data you combined is already a list)
+z=c(1,2,3)
+y=c(1,"sturdy",z)
+z
+y
+```
+<br>
+--sequences
+```{r}
+##Set a sequence from beginning to end with intervall steps
+x=seq(1,10,by = 2)
+x
+```
+<br>
+
+--structure
+```{r eval=FALSE}
+##Display the structure of an R object.
+str(penguins)
+```
+<br>
+
+--list
+```{r}
+##list objects in workspace
+ls()
+```
+<br>
+
+-- commands and calculations can be executed directly:
+```{r}
+2+6
+x=2
+y=6
+x+y
+```
+
+# Data summary
+<a name="datasummary"></a>
+
+```{r eval=FALSE}
+median(survey$kg, na.rm=TRUE)
+mean(survey$ssize, na.rm=T, 
+     trim=0.1)# takes away 10% on both sides
+max()
+min()
+sd()
+summary() # combines all those functions
+```
+```{r}
+quantile(survey$cm, 
+         na.rm=TRUE,
+         c(0.25,0.5,0.75)
+         )
+```
+
+# Datastructures and Manipulation
+
+In R, the primary data structures are vectors, lists, matrices, data frames, and factors. Each has unique characteristics:
+
+* **Vectors**
+  + basic building block 
+  + all elements must be of same type (numeric, characters,logical)
+  + are created using the c() or as.vector() command
+  
+* **Lists**
+  + Can contain elements of different types and sizes (numbers, strings, vectors, other lists, etc.).
+  + Nested Structure: Lists can contain other lists, allowing for complex nested structures.
+  + Variable Length: Lists can grow dynamically, and elements can be added or removed.
+  + created using list() or as.list()
+  
+* **Matrices**
+  + two-dimensional, similar to mathematical matrix
+  + homogenous - all elements must be of same type
+  + Created using matrix() or as.matrix()
+* **Data Frames**
+  + similar to matrices but can hold different type of data in each column
+  + Each column is a vector or factor, but different columns can have different types.
+  + Created using data.frame() or as.data.frame()
+
+
+
+
+<br>
+
+## Vectors
+
+* Atomic Vectors: Contain elements of a single basic type. There are several types:
+  + numeric, character, integer, logical 
+* Special Vectors: Include NULL (empty vector) and NA (missing value).
+* To convert character vectors to other types, use functions like as.numeric(), as.logical(), 
+
+
+### Create
+with c( )
+```{r}
+z=c(1,2,3)
+t=c(1:10)
+y=c(1,"sturdy",z)
+z
+t
+y
+class(y) ## When there are different types, R makes the vector the type which is the most flexible -- usually character. 
+```
+
+
+### Indexing
+with [ ] brackets 
+```{r}
+y[2]
+t[2:6]
+y[-2] ## negative index [-1] excludes value at this index
+y[y>1] ## logical indexing
+```
+
+### Indexing with Names
+You can name vector elements and index using these names.
+```{r}
+named_vector=c(a=1,b=2,c=3,life=69)
+named_vector["life"]
+```
+<br>
+### Operations 
+
+  * Functions: Many functions operate on vectors, like sum(), mean(), sort(), split() (splits vector into a list based on a factor)
+  * Arithmetic Operations: Can perform element-wise operations when the vector is of type numeric or integer - Error when character or boolean
+```{r}
+z*2
+```
+  
+  + Logical Operations: Element-wise comparisons return logical vectors.
+```{r}
+y > 2
+```
+ <br>
+## Lists
+<a name="lists"></a>
+
+### Created 
+xusing list()
+```{r}
+mylist= list(name=c("Benedikt","Ahmed", "Shaq"), age=c(24,54,100),  height=c(180,100,3000), data=c(1:10)) ## name, age and data are the keywords with which the entries are can be indexed. Each element must have a unique name
+mylist
+
+```
+
+### indexing
+```{r}
+mylist$age ## access elements by element name
+mylist[3] ## access sublist 
+
+```
+
+### modifying lists
+ 
+```{r}
+mylist=c(mylist , newelement="Range Rover") ## adding new elements or sublists
+mylist[2] = 1 ## direct value assignment at place of sublist
+mylist[[4]] = c(0,1) ##direct value assignemt into sublist
+mylist[[1]] = NULL ##removing elements or entire sublists
+mylist
+```
+### Operations on lists 
+
+a bit more complex than on vectors.
+
+You can do:
+
+* Element-wise operations with lapply() - returns a list- or sapply() - returns a vector or a matrix
+```{r}
+mylist[2]=lapply(mylist[2], function(x) x *  2)  ## Applies a function to each element of the sublist. 
+mylist
+##Improtant to note: indexing in the lapply function like that causes the production of 3 new sublists within the height sublist
+mylist$height=lapply(mylist$height, function(x) x *  2)  ## Applies a function to each element of the sublist. 
+mylist
+```
+
+* other operations:
+  + vapply() --> Similar to sapply(), but you specify the type of return value -->  safer and faster.
+  + unlist() --> Flatten a list to a vector.
+  + name() --> Get or set the names of the list elements.
+  + split() --> Split a vector into groups determined by a factor and return a list of vectors.
+  + rbind() and cbind() --> Combine elements of a list by rows or columns.
+  + length()/str()
+
+<br>
+
+## Dataframes
+<a name="dataframes"></a>
+
+In R, a DataFrame is a two-dimensional, tabular data structure with rows and columns, where each column can contain data of different types (numeric, character, factor, etc.).
+
+
+### Create
+using data.frame() or as.data.frame() or from excel file with read.csv()
+```{r}
+Reihenname= c("Irvin", "Rose", "Dirk","Wemby") #Rownames must always be declared as a variable
+df=data.frame(Column1=c(7,8,10,23), Gender=c("Male","Female","Male","Female"), row.names = Reihenname)
+df
+#You cant access rownames when indexing but rownames can be extracted with rownames():
+dfrownames=cbind(data.frame(rownames(df)),df)
+dfrownames
+
+```
+
+### Indexing:
+```{r}
+#for columnwise accessing
+q=dfrownames$Column1
+#or
+w=dfrownames[["Gender"]]
+#or
+e=dfrownames[, "Gender"]
+q
+w
+e
+
+#for rowwise indexing
+q=dfrownames["Irvin",]
+w=dfrownames["Dirk", "Gender"]
+q
+w
+```
+### Modifying existing dataframes
+```{r}
+#adding new columns
+dfrownames$Boolean=c(TRUE,FALSE,TRUE,FALSE)
+dfrownames$Dicksize=c(180,204,1334,1455)
+rownames(dfrownames)=c("first", "second", "thrid","fourth") #colnames for columns 
+dfrownames
+#adding new rows can be done with rbind(df, newDataRow)
+#entire dataframes can be merged --> merge(x,y,by=intersect(colum1(x), column2(y)), many more options. look up)
+```
+### Sorting and ordering
+```{r}
+#only ordering for columns possible, not for rows!
+dfrownames[order(dfrownames$Gender),]
+dfrownames[rev(order(dfrownames[,"Column1"])),]
+#sorting returns the value at the position and ordering only the index --> workaround if you put df[]in front
+
+dfrownames[dfrownames$Column1>9 & dfrownames$Boolean == TRUE,]
+```
+### Operations:
+
+    +aggregate()
+    + mean()
+    + summary()
+    + sd()
+    + and many more
+  
+all the operations are applied by using aggregate
+```{r}
+#in first arg u specify which column should be subjected to the function, in the second you determine which of the columns should be used to relate the function value to and in the last you specify the function
+aggregate(dfrownames[, c("Column1","Dicksize")], list(dfrownames$Gender) ,mean)
+aggregate(dfrownames$Dicksize, list(dfrownames$rownames.df.) ,mean)
+with(dfrownames, aggregate(Dicksize,by=list(Gender),mean))
+```
+    
+
+### Properties:
+    + nrow() --> get number of rows
+    + ncol() -- get number of cols
+    + dim() --> get dimensions
+    + rownames() --> get or set rownames
+    + colnames() --> get or set columnnames --> colnames(df)[2] = 'dingdong'
+    + length() --> lenght of column or row
+
+<br>
+
+## Matrices
+<a name="matrices"></a>
+
+Matrices are 2-D datastructures with rows and columns. In contrast to Dataframes Matrices can only store one type of elements(logical,numeric,character)
+
+ 
+###  Create
+
+using matrix() or as.matrix()
+```{r}
+reihenname= c("1.","2.")
+M = matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3, byrow = TRUE,rownames(reihenname))
+M
+ma= as.matrix(df, nrow=4, ncol=3, byrow = TRUE)#the elements of the dataframe declared above are all handeled as characters in the matrix --> no numerical operations possible 
+
+```
+
+### Indexing 
+```{r}
+ma[2,1]
+ma[1:2,1:2]#only return the first two rows and columns of the matrix
+```
+
+### Operations
+```{r}
+# M
+transposed_M = t(M)  # Transpose of M
+# Adding a row
+new_row = c(7, 8, 9)
+M = rbind(M, new_row)
+M
+logical_matrix = M > 3
+logical_matrix
+```
+
+ * Mathematical operations:
+ 
+  + inner product --> %*%
+  + identity matrix --> diag(M)=1
+  
+### Functions:
+    + apply() -> elementswise operations
+    + rowSums() --> gives sums of rows
+    + colSums()--> gives sums of cols
+ 
+```{r}
+rownames(M)[1]="Reihe1"
+rownames(M)[2]='Reihe2'
+apply(M,1,sum)
+```
+ 
+## Tables
+<a name="table"></a>
+A table in R is a matrix-like structure used to store and display counts or frequencies of variables.
+It's particularly well-suited for categorical data. Each unique value in your input vectors is treated as a separate category. Therefore, it's most meaningful when used with data where this categorical interpretation makes sense. Tables can be used to set up multidimensional data structures.
+To use tables with numerical data we have to use the [cut() funtion](#cut).
+
+```{r}
+#read.table(nym2,file="nym2.tab",sep="\t",quote=FALSE) -> read in table in readmode with read. and in write mode with write.table()
+vector1 = c("A", "B", "A", "B", "Z")
+vector2 = c("X", "X", "Y", "Y", "Z")
+result = table(vector1, vector2)
+
+cSize=cut(survey$cm,c(0,160,185,250))
+levels(cSize)=c("dwarfs","normals","giants")
+tabsurvey=table(survey$gender,survey$smoker,cSize)
+ftable(tabsurvey)#ftable for making multidimensional tables with more than 2 variables 
+```
+
+### Indexing
+```{r}
+#tabsurvey$dwarfs # only for atomic vectors
+tabsurvey[1,,] #see table for cSize against smoking status for gender status 1 (Females). For level 2 put 2 instead of 1
+tabsurvey[,1,]#see table for cSize against gender, for smoking status 1 (no->N). For smokers put 2 instead of 1
+tabsurvey[,,1]# see table for smoking status against gender, for cSize level 1 (dwarfs). For cSize level2(normals) type 2 and for cSize level3 (giants) type 3
+tabsurvey["F", "N", "dwarfs"] # indexing specific elements
+tabsurvey["F", "N", ]# by leaving out variable indicator the entire column is indexed. Here we are only indexing female nonsmokers
+```
+
+### Manipulation 
+binding and removing rows and columns
+```{r eval= FALSE}
+tabsurvey$newcolumn=c("x","y","z","s")
+tabsurvey=rbind(tabsurvey, newrow) # binding rows
+tabsurvey=cbind(tabsurvey, newcolumn)#binding columns
+tabsurvey$newcolumn=NULL #removing a column 
+tabsurvey=tabsurvey[,-2] # removes second column 
+
+
+```
+### Operations
+
+#### apply()
+apply any type of [data summarizing function](#datasummary) on every cell of the table
+```{r}
+apply(tabsurvey, c(2,3),sum)# summarizes all three dimensions individually. For having just a summary of 2 dimensions leave a number. 1= first dim, 2=second dim and 3=third dim
+```
+#### aggregate()
+```{r}
+aggregate(kg ~ # with this the mean is going to be calculated  --> has to be numerical
+          gender + smoker, #specifies the categorical data of the contigency table you want the mean to be mapped against 
+          data = survey, #specifies where the data is from
+          FUN=mean # specifies the function you want to apply. Any data summarizing function can be used
+          )
+```
+
+
+#### Proportions
+<a name="proportions"></a>
+```{r}
+row_prop=prop.table(tabsurvey,1)
+row_prop
+col_prop=prop.table(tabsurvey,2)
+col_prop
+```
+
+#### Merging tables 
+```{r eval=FALSE}
+merged_table <- merge(table1, table2)
+```
+
+### xtabs()
+function that creates contingency tables from categorical data, allowing for complex cross-tabulations and aggregation.
+```{r}
+tab = xtabs(cm ~ gender + smoker ,data = survey) #ths performs the summation of the heights (cm) for all the other categories
+tab
+```
+
+## Set operations with R
+```{r}
+vector1
+vector2
+intersect(vector1,vector2)
+union(vector1,vector2)
+setdiff(vector1,vector2)
+union(setdiff(vector1,vector2), setdiff(vector2,vector1))
+
+```
+
+## Cut() 
+<a name="cut"></a>
+can be used to transform whatever numerical data in categorical data as factors
+```{r}
+cSize=cut(survey$cm,c(0,160,185,250))
+levels(cSize)=c("dwarfs","normals","giants")
+table(cSize, survey$gender)
+class(cSize)
+```
+
+
+<br>
+
+# Plotting
+Two different graphic libraries are available in R: graphics and lattice --> graphics is simpler than lattice
+
+I am going to use the dataset safed in the following directory for illustrating the plots.
+
+## Common Plotting Arguments in R
+
+1. **`main`**: Main title of the plot.
+   - Example: `main = "Plot Title"`
+
+2. **`xlab`**, **`ylab`**: Axis labels for the x-axis and y-axis.
+   - Example: `xlab = "X-axis Label"`, `ylab = "Y-axis Label"`
+
+3. **`xlim`**, **`ylim`**: Axis limits for x and y.
+   - Example: `xlim = c(min, max)`, `ylim = c(min, max)`
+
+4. **`col`**: Color for points/lines.
+   - Example: `col = "colorName"` or `col = colorNumber`
+
+5. **`pch`**: Plotting character/symbol for points.
+   - Example: `pch = symbolNumber` (e.g., 16 for filled circle)
+
+6. **`lty`**: Line type.
+   - Example: `lty = "solid"` or `lty = 2` (dashed)
+
+7. **`lwd`**: Line width.
+   - Example: `lwd = lineWidth`
+
+8. **`type`**: Type of plot.
+   - Example: `type = "l"` (line), `type = "p"` (point), `type = "b"` (both), `type = "h"` (histogram)
+
+9. **`asp`**: Aspect ratio.
+   - Example: `asp = ratioNumber`
+
+10. **`sub`**: Sub-title for the plot.
+    - Example: `sub = "Sub-title Text"`
+
+11. **`cex`**, **`cex.axis`**, **`cex.lab`**, **`cex.main`**, **`cex.sub`**: Character expansion sizes.
+    - Example: `cex = size`, `cex.axis = size`, `cex.lab = size`, `cex.main = size`, `cex.sub = size`
+
+12. **`font`**, **`font.axis`**, **`font.lab`**, **`font.main`**, **`font.sub`**: Font type.
+    - Example: `font = fontStyle`, `font.axis = fontStyle`, `font.lab = fontStyle`, `font.main = fontStyle`, `font.sub = fontStyle`
+
+13. **`las`**: Style of axis labels.
+    - Example: `las = styleNumber`
+
+14. **`bty`**: Box type around the plot.
+    - Example: `bty = "boxType"`
+
+15. **`mar`**, **`oma`**: Margins around the plot and outer margins.
+    - Example: `mar = c(bottom, left, top, right)`, `oma = c(bottom, left, top, right)`
+
+```{r}
+survey=read.table('/Users/benedikthaarscheidt/M.Sc./SBI-labs/Data/survey-2021-11.tab.txt', header=TRUE, stringsAsFactors=TRUE)
+survey$gender=as.factor(survey$gender)
+head(survey)
+```
+<br>
+Functions can be plot by giving the formula:
+```{r}
+
+curve(x^3 - x, from = -5, to = 5, lwd = 3)#lwd=linewidth
+curve(x^4 - 3*x,add=TRUE,col=2,lty=2,lwd=3)#col1=black,col2=red, lty=linetype
+
+```
+<br>
+
+## Plot()
+
+Even guesses the plot to use based on the type of data provided(numerical, categorical)
+```{r}
+#pdf('plotting.pdf',width=10,height=10)#writing the plot to a file 
+#par(mai=rep(0,4)) #--> to include more plots in one file
+
+x=survey$cm
+y=survey$kg
+plot(x, y, 
+     type="p",#type="" (l=line,p=point,b=both,h=histogram)
+     main="Scatter Plot", 
+     xlab="X-axis", #xlabel
+     ylab="Y-axis", #ylabel
+     pch=1, #pch=plotting character (to see them --> pch=1:20)
+     col="red") 
+legend("top", 
+       legend="sickim",
+       bg = par("bg"), 
+       pch=21,
+       lty=1,
+       col="blue")
+
+
+```
+<br>
+
+## Histogramm --> hist()
+```{r}
+hist(survey$cm,
+     main = "histogramm",
+     xlab="height distribution",
+     ylab="Percent of total",
+     col="red",
+     freq = FALSE)#for including the density line
+lines(density(survey$cm, na.rm = TRUE), col="blue",lwd=2)
+```
+<br>
+
+## Coplot 
+
+visualizing the relationship between two variables while conditioning on one or more other variables. This is particularly useful in datasets with multiple variables, where you want to understand how relationships change across different subgroups.
+```{r}
+coplot(survey$kg ~ survey$kg | survey$gender, 
+       ylim=c(0,300), 
+       bar.bg=c(fac='#FFE4C4'),
+       panel=function(x,y,...) 
+       {hist(x,add=TRUE,col='beige');},
+       xlab=c("KG","Sex"), 
+       ylab="Runners",main="Survey")
+```
+<br>
+
+## Boxplot
+<a name="boxplot"></a>
+### Categorical against numerical 
+```{r}
+boxplot(survey$kg~survey$gender,
+        main="Boxplot Sex against weight",
+        col=c("salmon","blue"),
+        )
+```
+
+### Cut 
+sometimes it can also be useful to cut the dataset into groups in order to make numerical data categorical 
+```{r}
+height=cut(survey$cm, 
+           breaks=c(0,160,185,200),
+           labels=c("small","medium","large"))#cut can be used with definded cut points (like here) or by specifying intervals with a range given by a number.
+            # cut(x, breaks, labels = NULL, include.lowest = FALSE, right = TRUE, dig.lab = 3, ordered_result = FALSE, ...)
+boxplot(survey$kg~height,
+        main="Boxplots with groups",
+        col=c("green","lightblue","blue"))
+class(survey)
+```
+
+<br>
+
+## Assocplot()
+<a name="assocplot"></a>
+only applicable on tables --> convert data to table
+```{r}
+surveytab=table(survey$smoker, survey$gender)
+assocplot(surveytab,
+          col=c("black","white"),
+          main="Assoc from Survey")
+```
+
+## Mosaicplot 
+<a name="mosaicplot"></a>
+```{r}
+mosaicplot(surveytab,
+           col=c("salmon","green"),#color not visible because the individual fields would take the colour of the p-value
+           shade=TRUE, #this includes the p-values
+           main="Mosaic from Survey")
+```
+
+## Pairs()
+<a name="pairs"></a>
+plotting every variable against every other variable
+```{r}
+pairs(survey,#very uncomprehensive for large data sets 
+      col="blue",
+      pch=19)
+```
+
+improved version with distribution in the middle --> could be useful one day
+```{r}
+panel.hist = function(x, ...) {
+  usr = par("usr");
+  on.exit(par(usr=usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h = hist(x, plot = FALSE)
+  breaks = h$breaks;
+  nB = length(breaks);
+  y = h$counts;
+  y = y/max(y)
+rect(breaks[-nB], 0, breaks[-1], y, col="cyan")}
+pairs(survey,diag.panel=panel.hist,
+      col="blue")
+surveytab
+
+```
+
+## Pie()
+<a name="pie"></a>
+for piecharts to visualize proportions
+```{r}
+#note that this plot does not make sense for the data visualized. This serves as example 
+names <- c("yes", "no", "male", "female")
+
+# Create the pie chart
+pie(surveytab,
+    labels = names,
+    col = rainbow(length(surveytab)),
+    clockwise = TRUE, 
+    init.angle = 90  # or 0, depending on where you want to start
+)
+```
+
+## Low level commands to add information to an existing plot
+
+# Intro Statistics
+
+**Research modes**
+  
+  * correlational research: reading behavior of something and making conclusions without changing a parameter
+  * experimental research: manipulate a variable, group the samples --> e.g. study for a drug with placebo and active 
+  
+**Data types**
+  
+  * Categorical(qualitative)
+    + nominal: gender (m,f), smoker(y,n),nucleotides(A,T,C,G)
+    + ordinal: grades (1,2,3,4,5,6), months(1,2,3,4,5,6,7,8,9,10,11,12)
+  * Numerical(quantitative):
+    + discrete: age(1,2,57,67), height(123,180,200)
+    + continuous: weight(79.99,61.22,...), height(162.222,...)
+    
+**Dependency and Independecy**
+  
+  * dependent variable
+    + is a outcome variable
+  * independent variable
+    + variable influences other variables
+    + is a predictor
+    + makes sense to manipulate 
+    
+
+## Inferential vs Descriptive Statistics
+
+**Descriptive statistics** is concerned with summarizing and describing the main features of a dataset. It provides simple summaries about the sample and the measures. These summaries may be either quantitative (i.e., summary statistics) or visual (i.e., charts and graphs). Key aspects of descriptive statistics include:
+
+ + Central Tendency: Measures like mean, median, and mode that describe the center of a dataset.
+ + Variability or Dispersion: Measures like range, variance, and standard deviation that describe the spread of the data.
+ + Frequency Distributions: Counts or proportions of values or categories of a variable.
+ + Graphical Representations: Charts and graphs such as histograms, bar charts, and box plots.
+
+Descriptive statistics do not, however, allow for making conclusions beyond the data we have analyzed or for making inferences about any hypotheses we might have made.
+
+
+**Inferential Statistics**
+Inferential statistics is used to make inferences or generalizations about a population based on data from a sample of that population. It allows us to make evidence-based decisions and predictions. Key aspects of inferential statistics include:
+
+ + Estimation: Estimating population parameters (like mean or proportion) based on sample statistics. This often involves the use of confidence intervals.
+ + Hypothesis Testing: Testing assumptions or claims (hypotheses) about a population based on sample data. This includes techniques like t-tests, chi-square tests, ANOVA, etc.
+ + Regression Analysis: Understanding relationships between variables and making predictions.
+ + Probability: The study of randomness and uncertainty; it forms the basis of inferential statistics.
+
+Inferential statistics involves making probabilistic statements about the data, which means there is always a chance of making incorrect conclusions due to sampling error.
+
+
+### Descriptive statistics
+
+ * What is the sample distribution:
+    + max, min, quantile, IQR, standard deviation, CV, mean
+ * Describe the population:
+    + SEM, CI, P-value
+
+#### Estimators
+
+Population Mean (): This is the average value of a characteristic in the entire population. In most real-world scenarios, the population mean is unknown because it's impractical or impossible to measure every individual in the population.
+
+Sample Mean (y mit strich): This is the average value of the same characteristic in a sample drawn from the population. The sample mean is calculated from the data that have been collected and is used as an estimate of the population mean.
+
+Unbiased Estimator: An estimator is said to be unbiased if, on average, it produces estimates that are equal to the true parameter value. This means that if you were to take many samples and calculate the estimator (in this case, the sample mean) for each sample, the average of all these estimates would converge to the true population parameter ().
+
+#### Data summary
+When applying descriptive statistics, we want to summarize the sample data using the tools from section [Data Summary](#datasummary).
+[Tables](#table) are a very useful data structure for doint those descriptive measures. In order to make numerical data applicable for tables, we have to use the [Cut() function](#cut)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
